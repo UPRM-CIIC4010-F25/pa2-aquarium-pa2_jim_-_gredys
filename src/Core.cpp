@@ -13,6 +13,31 @@ void Creature::normalize() {
 
 void Creature::bounce() {
     // should implement boundary controls here
+    float left   = 0.0f;
+    float top    = 0.0f;
+    float right  = ofGetWidth();
+    float bottom = ofGetHeight();
+    float r = getCollisionRadius();
+
+    // Rebound on left and right walls
+    if(m_x - r < left){
+        m_x = left + r;
+        m_dx = -m_dx;
+    }
+    if(m_x + r > right){
+        m_x = right - r;
+        m_dx = -m_dx;
+    }
+    // Rebound on top and bottom walls
+    if(m_y - r < top){
+        m_y = top + r;
+        m_dy = -m_dy;
+    }
+    if(m_y + r > bottom){
+        m_y = bottom - r;
+        m_dy = -m_dy;
+    }
+
 }
 
 
