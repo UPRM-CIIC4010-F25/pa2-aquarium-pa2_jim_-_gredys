@@ -15,8 +15,8 @@ void Creature::bounce() {
     // should implement boundary controls here
     float left   = 0.0f;
     float top    = 0.0f;
-    float right  = ofGetWidth();
-    float bottom = ofGetHeight();
+    float right  = ofGetWidth() - 60.0f;
+    float bottom = ofGetHeight() - 60.0f;
     float r = getCollisionRadius();
 
     // Rebound on left and right walls
