@@ -310,6 +310,20 @@ void AquariumGameScene::Update(){
             }
         }
         this->m_aquarium->update();
+        //The PowerUp Logic
+        if(!m_powerUp && ofRandom(1.0) < 0.002){
+            float x = ofRandom(100, m_aquarium->getWidth()-100);
+            float y = ofRandom(100, m_aquarium->getHeight()-100);
+            m_powerUp = std::make_shared<PowerUp>(x, y, std::make_shared<GameSprite>("pearlpowerup.png", 64, 64));
+        }
+        //if statement to check when we touch the powerup
+        if(m_powerUp && m_powerUp->isActive()){
+            ofRectangle playerRect(m_player->getX(), m_player->getY(), 80, 80);
+            if(playerRect.intersects(m_powerUp->getBounds())){
+                m_player->setLives(m_player->getLives()+1);
+                m_powerUp->deactivate();
+            }
+        }
     }
 
 }
@@ -318,7 +332,11 @@ void AquariumGameScene::Draw() {
     this->m_player->draw();
     this->m_aquarium->draw();
     this->paintAquariumHUD();
-
+    //powerup
+    if(m_powerUp && m_powerUp->isActive()){
+        m_powerUp->draw();
+    }
+    this->paintAquariumHUD();
 }
 
 
