@@ -5,7 +5,10 @@
 #include <iostream>
 #include <algorithm>
 #include "Core.h"
+#include "ofMain.h"
 
+class GameSprite;
+class PowerUp;
 
 enum class AquariumCreatureType {
     NPCreature,
@@ -156,8 +159,10 @@ class AquariumGameScene : public GameScene {
         std::shared_ptr<PlayerCreature> m_player;
         std::shared_ptr<Aquarium> m_aquarium;
         std::shared_ptr<GameEvent> m_lastEvent;
+        //adding powerup
+         std::shared_ptr<PowerUp> m_powerUp;
         string m_name;
-        AwaitFrames updateControl{5};
+        AwaitFrames updateControl{5};   
 };
 
 
@@ -188,5 +193,36 @@ class Level_2 : public AquariumLevel  {
 
         };
         std::vector<AquariumCreatureType> Repopulate() override;
+
+};
+
+class PowerUp {
+
+    public:
+    PowerUp(float x, float y, std::shared_ptr<GameSprite> sprite){ 
+        this->m_x = x;
+        this->m_y = y;
+        this->m_sprite = sprite;
+        this->m_active = true; 
+    }
+
+    void draw(){
+        if(!m_active){return;}
+        if(m_sprite){
+           m_sprite->draw(m_x, m_y);
+        }
+    }
+
+    ofRectangle getBounds() const {
+        return ofRectangle(m_x, m_y, 50, 50);
+    }
+    bool isActive() const {return m_active;}
+    void deactivate() {m_active = false;}
+
+    private:
+    float m_x;
+    float m_y;
+    bool m_active;
+    std::shared_ptr<GameSprite> m_sprite;
 
 };
