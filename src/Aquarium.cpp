@@ -8,6 +8,10 @@ string AquariumCreatureTypeToString(AquariumCreatureType t){
             return "BiggerFish";
         case AquariumCreatureType::NPCreature:
             return "BaseFish";
+        case AquariumCreatureType::JellyDrifter:
+            return "JellyDrifter";
+        case AquariumCreatureType::PufferFish:
+            return "PufferFish";
         default:
             return "UknownFish";
     }
@@ -130,12 +134,51 @@ void BiggerFish::draw() const {
     ofLogVerbose() << "BiggerFish at (" << m_x << ", " << m_y << ") with speed " << m_speed << std::endl;
     this->m_sprite->draw(this->m_x, this->m_y);
 }
+JellyDrifter::JellyDrifter(float x, float y, int speed, std::shared_ptr<GameSprite> sprite)
+: NPCreature(x, y, speed, sprite) {
+    m_creatureType = AquariumCreatureType::JellyDrifter;
+    m_dx = (rand()%2==0) ? 0.5f : -0.5f;
+}
+void JellyDrifter::move(){
+    m_phase += 0.08f;
+    m_y += std::sin(m_phase) * 1.2f;     
+    m_x += m_dx * (m_speed * 0.4f);      
+    bounce();
+}
+void JellyDrifter::draw() const {
+    if (m_sprite) m_sprite->draw(m_x, m_y);
+}
+
+PufferFish::PufferFish(float x, float y, int speed, std::shared_ptr<GameSprite> sprite)
+: NPCreature(x, y, speed, sprite) {
+    m_creatureType = AquariumCreatureType::PufferFish;
+    setCollisionRadius(25);
+}
+void PufferFish::move(){
+    ++m_frame;
+    m_y += std::sin(m_frame * 0.05f) * 0.8f;
+    m_x += m_dx * (m_speed * 0.6f);
+    bounce();
+
+    if (m_frame % 180 == 0) {
+        m_inflated = !m_inflated;
+        setCollisionRadius(m_inflated ? 40 : 25);
+        setSpeed(m_inflated ? std::max(1, getSpeed()/2) : getSpeed()*2);
+    }
+}
+void PufferFish::draw() const {
+    if (m_sprite) m_sprite->draw(m_x, m_y);
+}
+
+
 
 
 // AquariumSpriteManager
 AquariumSpriteManager::AquariumSpriteManager(){
     this->m_npc_fish = std::make_shared<GameSprite>("base-fish.png", 70,70);
     this->m_big_fish = std::make_shared<GameSprite>("bigger-fish.png", 120, 120);
+    this->m_jellyfish  = std::make_shared<GameSprite>("jelly_drifter.png", 90, 90);
+    this->m_pufferfish = std::make_shared<GameSprite>("pufferfish.png",  100,100);
 }
 
 std::shared_ptr<GameSprite> AquariumSpriteManager::GetSprite(AquariumCreatureType t){
@@ -145,6 +188,10 @@ std::shared_ptr<GameSprite> AquariumSpriteManager::GetSprite(AquariumCreatureTyp
             
         case AquariumCreatureType::NPCreature:
             return std::make_shared<GameSprite>(*this->m_npc_fish);
+        case AquariumCreatureType::JellyDrifter:
+            return std::make_shared<GameSprite>(*this->m_jellyfish);
+        case AquariumCreatureType::PufferFish:
+            return std::make_shared<GameSprite>(*this->m_pufferfish);
         default:
             return nullptr;
     }
@@ -218,6 +265,12 @@ void Aquarium::SpawnCreature(AquariumCreatureType type) {
             break;
         case AquariumCreatureType::BiggerFish:
             this->addCreature(std::make_shared<BiggerFish>(x, y, speed, this->m_sprite_manager->GetSprite(AquariumCreatureType::BiggerFish)));
+            break;
+        case AquariumCreatureType::JellyDrifter:
+            this->addCreature(std::make_shared<JellyDrifter>(x, y, speed, this->m_sprite_manager->GetSprite(AquariumCreatureType::JellyDrifter)));
+            break;
+        case AquariumCreatureType::PufferFish:
+            this->addCreature(std::make_shared<PufferFish>(x, y, speed, this->m_sprite_manager->GetSprite(AquariumCreatureType::PufferFish)));
             break;
         default:
             ofLogError() << "Unknown creature type to spawn!";
