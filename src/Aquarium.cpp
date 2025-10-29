@@ -131,11 +131,41 @@ void BiggerFish::draw() const {
     this->m_sprite->draw(this->m_x, this->m_y);
 }
 
+//Shark Logic
+    Shark::Shark(float x, float y, int speed, std::shared_ptr<GameSprite> sprite): NPCreature(x, y, speed, sprite){
+        m_dx = (rand() % 3 - 1);
+        m_dy = (rand() % 3 - 1);
+        normalize();
+
+        setCollisionRadius(90);
+        m_value = -10;
+        m_creatureType = AquariumCreatureType::Shark;
+    }
+    void Shark::move(){
+        m_x += m_dx * (m_speed * 1.5);
+        m_y += m_dy * (m_speed * 1.5);
+
+        //if statement para q el shark sea mas dynamic y unpredictable
+        if(ofRandom(1.0) < 0.02){
+            m_dx = (rand() % 3 - 1);
+            m_dy = (rand() % 3 - 1);
+            normalize();
+        }
+        bounce();
+    }
+
+    void Shark::draw() const{
+        ofLogVerbose() << "Shark at (" << m_x << ", " << m_y << ")";
+        if(m_sprite){
+            m_sprite->draw(m_x, m_y);
+        }
+    }
 
 // AquariumSpriteManager
 AquariumSpriteManager::AquariumSpriteManager(){
     this->m_npc_fish = std::make_shared<GameSprite>("base-fish.png", 70,70);
     this->m_big_fish = std::make_shared<GameSprite>("bigger-fish.png", 120, 120);
+    this->m_shark = std::make_shared<GameSprite>("Shark.png", 180, 180);
 }
 
 std::shared_ptr<GameSprite> AquariumSpriteManager::GetSprite(AquariumCreatureType t){
@@ -145,7 +175,11 @@ std::shared_ptr<GameSprite> AquariumSpriteManager::GetSprite(AquariumCreatureTyp
             
         case AquariumCreatureType::NPCreature:
             return std::make_shared<GameSprite>(*this->m_npc_fish);
-        default:
+
+        case AquariumCreatureType::Shark:
+            return std::make_shared<GameSprite>(*this->m_shark);
+
+            default:
             return nullptr;
     }
 }
@@ -219,6 +253,11 @@ void Aquarium::SpawnCreature(AquariumCreatureType type) {
         case AquariumCreatureType::BiggerFish:
             this->addCreature(std::make_shared<BiggerFish>(x, y, speed, this->m_sprite_manager->GetSprite(AquariumCreatureType::BiggerFish)));
             break;
+
+        case AquariumCreatureType::Shark:
+        this->addCreature(std::make_shared<Shark>(x, y, speed, this->m_sprite_manager->GetSprite(AquariumCreatureType::Shark)));
+        break;
+
         default:
             ofLogError() << "Unknown creature type to spawn!";
             break;
@@ -254,6 +293,17 @@ void Aquarium::Repopulate() {
     ofLogVerbose() << "amount to repopulate : " << toRespawn.size() << endl;
     if(toRespawn.size() <= 0 ){return;} // there is nothing for me to do here
     for(AquariumCreatureType newCreatureType : toRespawn){
+        //shark logic
+        if(newCreatureType == AquariumCreatureType::Shark){
+            ofLogNotice() << "it's a shark";
+            auto *app = dynamic_cast<ofBaseApp*>(ofGetAppPtr());
+            if(app){
+                auto *GameScene = dynamic_cast<AquariumGameScene*>(app);
+                if(GameScene){
+                    GameScene->sharkRedFlash = 180.0f;               
+               }
+            }
+        }
         this->SpawnCreature(newCreatureType);
     }
 }
@@ -283,17 +333,28 @@ void AquariumGameScene::Update(){
         event = DetectAquariumCollisions(this->m_aquarium, this->m_player);
         if (event != nullptr && event->isCollisionEvent()) {
             ofLogVerbose() << "Collision detected between player and NPC!" << std::endl;
+            
             if(event->creatureB != nullptr){
                 event->print();
-                if(this->m_player->getPower() < event->creatureB->getValue()){
-                    ofLogNotice() << "Player is too weak to eat the creature!" << std::endl;
-                    this->m_player->loseLife(3*60); // 3 frames debounce, 3 seconds at 60fps
+                
+                //new logic to deduct points if collide with shark but first to check what type of creature collided
+                auto npc = std::dynamic_pointer_cast<NPCreature>(event->creatureB);
+                
+                if(npc && npc->GetType() == AquariumCreatureType::Shark){
+                    ofLogNotice() << "Shark Collision, player lost 20 points" << std::endl;
+                    int currentScore = this->m_player->getScore();
+                    int newScore = std::max(0, currentScore - 20);
+                    this->m_player->addToScore(newScore - currentScore);
+
+                    //I want the screen to kind of flash red 
+                    this->m_player->loseLife(60);
+                    sharkRedFlash = 180.0f;
                     if(this->m_player->getLives() <= 0){
                         this->m_lastEvent = std::make_shared<GameEvent>(GameEventType::GAME_OVER, this->m_player, nullptr);
                         return;
                     }
-                }
-                else{
+
+                }else{
                     this->m_aquarium->removeCreature(event->creatureB);
                     this->m_player->addToScore(1, event->creatureB->getValue());
                     if (this->m_player->getScore() % 25 == 0){
@@ -303,13 +364,12 @@ void AquariumGameScene::Update(){
                     
                 }
                 
-                
-
             } else {
                 ofLogError() << "Error: creatureB is null in collision event." << std::endl;
             }
         }
         this->m_aquarium->update();
+        
         //The PowerUp Logic
         if(!m_powerUp && ofRandom(1.0) < 0.002){
             float x = ofRandom(100, m_aquarium->getWidth()-100);
@@ -325,18 +385,43 @@ void AquariumGameScene::Update(){
             }
         }
     }
-
 }
 
 void AquariumGameScene::Draw() {
-    this->m_player->draw();
+
+    
     this->m_aquarium->draw();
-    this->paintAquariumHUD();
-    //powerup
+    this->m_player->draw();
+     //powerup
     if(m_powerUp && m_powerUp->isActive()){
         m_powerUp->draw();
     }
     this->paintAquariumHUD();
+    //red flashing
+    if(sharkRedFlash > 0.0f){
+        ofPushStyle();
+        ofEnableAlphaBlending();
+
+        const int width = ofGetWindowWidth();
+        const int height = ofGetWindowHeight();
+
+       
+        ofSetColor(255, 0, 0, sharkRedFlash);
+        ofFill();
+        ofDrawRectangle(0, 0, width, height);
+
+        const int vignette = 90;
+        ofSetColor(120, 0, 0, static_cast<int>(sharkRedFlash* 0.3f));
+        ofDrawRectangle(0, 0, width, vignette);
+        ofDrawRectangle(0, height - vignette, width, vignette);
+        ofDrawRectangle(0, 0, vignette, height);
+        ofDrawRectangle(width - vignette, 0, vignette, height);
+
+        sharkRedFlash -= 4.0f;
+        if(sharkRedFlash < 0.0f) sharkRedFlash = 0.0f;
+
+        ofPopStyle();
+    }
 }
 
 
@@ -412,6 +497,22 @@ std::vector<AquariumCreatureType> Level_1::Repopulate() {
 }
 
 std::vector<AquariumCreatureType> Level_2::Repopulate() {
+    std::vector<AquariumCreatureType> toRepopulate;
+    for(std::shared_ptr<AquariumLevelPopulationNode> node : this->m_levelPopulation){
+        int delta = node->population - node->currentPopulation;
+        if(delta >0){
+            for(int i=0; i<delta; i++){
+                toRepopulate.push_back(node->creatureType);
+            }
+            node->currentPopulation += delta;
+        }
+    }
+    return toRepopulate;
+}
+
+//level 3
+
+std::vector<AquariumCreatureType> Level_3::Repopulate() {
     std::vector<AquariumCreatureType> toRepopulate;
     for(std::shared_ptr<AquariumLevelPopulationNode> node : this->m_levelPopulation){
         int delta = node->population - node->currentPopulation;
