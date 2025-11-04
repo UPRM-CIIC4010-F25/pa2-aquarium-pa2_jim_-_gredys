@@ -24,8 +24,8 @@ Grading
 ## Team Info
 | Student Number | Student Name | Student Email |
 |-|-|-|
-|(STUDENT NUMBER HERE)| (STUDENT NAME HERE)| (STUDENT EMAIL HERE) |
-|(STUDENT NUMBER HERE)| (STUDENT NAME HERE)| (STUDENT EMAIL HERE) |
+|(843-21-4571)| (Gredys N. Colón Ramos)| (gredys.colon@upr.edu) |
+|(843-22-7069)| (Jim Morales Vega)| (jim.morales@upr.edu) |
 
 ---
 
@@ -36,4 +36,8 @@ You MUST put you & your partner's information in this README file otherwise ther
 If a partner has no commits in the repositories, they will receive a 0.
 
 # Student Notes
+
 If you have any bonus specs, bonus or any details the TA's should know, you should include it here:
+Bonus:
+Bikini Bottom Theme background,and music plus a new level where you have to capture 10 golden jellyfish.
+additionally, although its not part of the bonus in stage 2 I added 2 powerups one gives you a new life and the other one you have to press the 's' key to make it apear and it will act as a shield, shielding the user from 5 hits.
