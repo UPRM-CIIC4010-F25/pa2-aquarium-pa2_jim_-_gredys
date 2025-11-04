@@ -5,11 +5,11 @@ void ofApp::setup(){
 
     ofSetFrameRate(60);
     ofSetBackgroundColor(ofColor::blue);
-    backgroundImage.load("background.png");
+    backgroundImage.load("newBackground.png");
     backgroundImage.resize(ofGetWindowWidth(), ofGetWindowHeight());
 
         //background sound/music 
-        backgroundSound.load("underwaterbubbles.wav");
+        backgroundSound.load("SB Theme.wav");
         backgroundSound.setLoop(true);
         backgroundSound.setVolume(0.5);
         backgroundSound.play();
@@ -28,7 +28,7 @@ void ofApp::setup(){
     // first we make the intro scene 
     gameManager->AddScene(std::make_shared<GameIntroScene>(
         GameSceneKindToString(GameSceneKind::GAME_INTRO),
-        std::make_shared<GameSprite>("title.png", ofGetWindowWidth(), ofGetWindowHeight())
+        std::make_shared<GameSprite>("newTitle.png", ofGetWindowWidth(), ofGetWindowHeight())
     ));
 
     //AquariumSpriteManager
