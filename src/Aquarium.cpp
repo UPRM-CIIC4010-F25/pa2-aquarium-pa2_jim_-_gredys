@@ -175,7 +175,7 @@ void PufferFish::draw() const {
         m_dy = (rand() % 3 - 1);
         normalize();
 
-        setCollisionRadius(45);
+        setCollisionRadius(90);
         m_value = -10;
         m_creatureType = AquariumCreatureType::Shark;
     }
