@@ -46,6 +46,7 @@ void ofApp::setup(){
     myAquarium->addAquariumLevel(std::make_shared<Level_2>(2, 20));
     //level 3
     myAquarium->addAquariumLevel(std::make_shared<Level_3>(3, 35));
+    myAquarium->addAquariumLevel(std::make_shared<Level_GoldenJellyDrifters>(5, 10));
     myAquarium->Repopulate(); // initial population
 
     // now that we are mostly set, lets pass the player and the aquarium downstream

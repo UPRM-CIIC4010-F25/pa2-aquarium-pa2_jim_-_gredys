@@ -15,7 +15,8 @@ enum class AquariumCreatureType {
     BiggerFish,
     JellyDrifter,
     PufferFish,
-    Shark
+    Shark,
+    GoldenJelly
 };
 
 string AquariumCreatureTypeToString(AquariumCreatureType t);
@@ -37,7 +38,7 @@ class AquariumLevel : public GameLevel {
     public:
         AquariumLevel(int levelNumber, int targetScore)
         : GameLevel(levelNumber), m_level_score(0), m_targetScore(targetScore){};
-        void ConsumePopulation(AquariumCreatureType creature, int power);
+        virtual void ConsumePopulation(AquariumCreatureType creature, int power);
         bool isCompleted() override;
         void populationReset();
         void levelReset(){m_level_score=0;this->populationReset();}
@@ -107,6 +108,12 @@ private:
     float m_phase = 0.0f;
 };
 
+class GoldenJellyDrifter : public JellyDrifter {
+public:
+    GoldenJellyDrifter(float x, float y, int speed, std::shared_ptr<GameSprite> sprite);
+    void draw() const override;
+};
+
 class PufferFish : public NPCreature {
 public:
     PufferFish(float x, float y, int speed, std::shared_ptr<GameSprite> sprite);
@@ -136,6 +143,7 @@ class AquariumSpriteManager {
         std::shared_ptr<GameSprite> m_shark;
         std::shared_ptr<GameSprite> m_jellyfish;
         std::shared_ptr<GameSprite> m_pufferfish;
+        std::shared_ptr<GameSprite> m_goldenJelly;
 };
 
 
@@ -234,6 +242,18 @@ class Level_3 : public AquariumLevel  {
             this->m_levelPopulation.push_back(std::make_shared<AquariumLevelPopulationNode>(AquariumCreatureType::BiggerFish, 5));
             this->m_levelPopulation.push_back(std::make_shared<AquariumLevelPopulationNode>(AquariumCreatureType::JellyDrifter, 8));
             this->m_levelPopulation.push_back(std::make_shared<AquariumLevelPopulationNode>(AquariumCreatureType::PufferFish, 8));
+    }
+};
+
+class Level_GoldenJellyDrifters : public AquariumLevel {
+public:
+    void ConsumePopulation(AquariumCreatureType creature, int power) override;
+    Level_GoldenJellyDrifters(int levelNumber, int targetScore)
+        : AquariumLevel(levelNumber, targetScore)
+    {
+        // Solo aparecen 10 Golden Jelly
+        this->m_levelPopulation.push_back(std::make_shared<AquariumLevelPopulationNode>(AquariumCreatureType::GoldenJelly, 2));
+        this->m_levelPopulation.push_back(std::make_shared<AquariumLevelPopulationNode>(AquariumCreatureType::JellyDrifter, 10));
     }
 };
 
