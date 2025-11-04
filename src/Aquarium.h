@@ -196,6 +196,10 @@ class AquariumGameScene : public GameScene {
          std::shared_ptr<PowerUp> m_powerUp;
         string m_name;
         AwaitFrames updateControl{5};   
+        //adding second powerup
+        std::shared_ptr<PowerUp> m_shieldPowerUp;
+        bool m_hasShield = false;
+        int m_shieldHitsRemaining = 0;
 };
 
 
