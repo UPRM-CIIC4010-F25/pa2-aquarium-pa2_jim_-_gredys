@@ -379,6 +379,13 @@ void AquariumGameScene::Update(){
 
     this->m_player->update();
 
+     //The Shield PowerUp Logic
+        if(ofGetKeyPressed('s') &&  !m_hasShield && !m_shieldPowerUp){
+            float x = ofRandom(100, m_aquarium->getWidth()-100);
+            float y = ofRandom(100, m_aquarium->getHeight()-100);
+             m_shieldPowerUp = std::make_shared<PowerUp>(x, y, std::make_shared<GameSprite>("bubblepowerup.png", 64, 64));
+        }
+
     if (this->updateControl.tick()) {
         event = DetectAquariumCollisions(this->m_aquarium, this->m_player);
         if (event != nullptr && event->isCollisionEvent()) {
@@ -391,6 +398,19 @@ void AquariumGameScene::Update(){
                 auto npc = std::dynamic_pointer_cast<NPCreature>(event->creatureB);
                 
                 if(npc && npc->GetType() == AquariumCreatureType::Shark){
+
+                    //shield powerUp
+                    if(m_hasShield){
+                        m_shieldHitsRemaining--;
+                        ofLogNotice() << "Shield absorbed attack/hit! Remaining: " << m_shieldHitsRemaining;
+
+
+                        if(m_shieldHitsRemaining <= 0){
+                            m_hasShield = false;
+                            ofLogNotice() << "Shield broke!";
+                        }
+                    }else{
+
                     ofLogNotice() << "Shark Collision, player lost 20 points" << std::endl;
                     int currentScore = this->m_player->getScore();
                     int newScore = std::max(0, currentScore - 20);
@@ -403,8 +423,9 @@ void AquariumGameScene::Update(){
                         this->m_lastEvent = std::make_shared<GameEvent>(GameEventType::GAME_OVER, this->m_player, nullptr);
                         return;
                     }
+                }
 
-                }else{
+             }else{
                     this->m_aquarium->removeCreature(event->creatureB);
                     this->m_player->addToScore(1, event->creatureB->getValue());
                     if (this->m_player->getScore() % 25 == 0){
@@ -426,6 +447,7 @@ void AquariumGameScene::Update(){
             float y = ofRandom(100, m_aquarium->getHeight()-100);
             m_powerUp = std::make_shared<PowerUp>(x, y, std::make_shared<GameSprite>("pearlpowerup.png", 64, 64));
         }
+       
         //if statement to check when we touch the powerup
         if(m_powerUp && m_powerUp->isActive()){
             ofRectangle playerRect(m_player->getX(), m_player->getY(), 80, 80);
@@ -434,6 +456,18 @@ void AquariumGameScene::Update(){
                 m_powerUp->deactivate();
             }
         }
+        //if statement to check when we touch the shield powerup
+        if(m_shieldPowerUp && m_shieldPowerUp->isActive()){
+            ofRectangle playerRect(m_player->getX(), m_player->getY(), 80, 80);
+            if(playerRect.intersects(m_shieldPowerUp->getBounds())){
+                m_hasShield = true;
+                m_shieldHitsRemaining = 5;
+                m_shieldPowerUp->deactivate();
+                ofLogNotice() << "Shield Activated! Hits remaining: " << m_shieldHitsRemaining;
+            }
+        }
+
+        
     }
 }
 
@@ -445,6 +479,9 @@ void AquariumGameScene::Draw() {
      //powerup
     if(m_powerUp && m_powerUp->isActive()){
         m_powerUp->draw();
+    }
+    if(m_shieldPowerUp && m_shieldPowerUp->isActive()){
+        m_shieldPowerUp->draw();
     }
     this->paintAquariumHUD();
     //red flashing
