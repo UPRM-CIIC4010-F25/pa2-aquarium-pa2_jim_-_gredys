@@ -12,6 +12,8 @@ string AquariumCreatureTypeToString(AquariumCreatureType t){
             return "JellyDrifter";
         case AquariumCreatureType::PufferFish:
             return "PufferFish";
+        case AquariumCreatureType::GoldenJelly:
+            return "GoldenJelly";
         default:
             return "UknownFish";
     }
@@ -148,7 +150,21 @@ void JellyDrifter::move(){
 void JellyDrifter::draw() const {
     if (m_sprite) m_sprite->draw(m_x, m_y);
 }
+GoldenJellyDrifter::GoldenJellyDrifter(float x, float y, int speed, std::shared_ptr<GameSprite> sprite)
+: JellyDrifter(x, y, speed, sprite) {
+    m_creatureType = AquariumCreatureType::GoldenJelly;
+    setCollisionRadius(35);
+    m_value = 1; // cada uno cuenta para la meta
+}
 
+void GoldenJellyDrifter::draw() const {
+    ofPushStyle();
+    ofEnableAlphaBlending();
+    ofSetColor(255, 255, 150, 200);  // tono dorado luminoso
+    JellyDrifter::draw();
+    ofDisableAlphaBlending();
+    ofPopStyle();
+}
 PufferFish::PufferFish(float x, float y, int speed, std::shared_ptr<GameSprite> sprite)
 : NPCreature(x, y, speed, sprite) {
     m_creatureType = AquariumCreatureType::PufferFish;
@@ -206,6 +222,7 @@ AquariumSpriteManager::AquariumSpriteManager(){
     this->m_shark = std::make_shared<GameSprite>("Shark.png", 180, 180);
     this->m_jellyfish  = std::make_shared<GameSprite>("jelly_drifter.png", 90, 90);
     this->m_pufferfish = std::make_shared<GameSprite>("pufferfish.png",  100,100);
+    this->m_goldenJelly = std::make_shared<GameSprite>("gold_jelly.png", 90, 90);
 }
 
 std::shared_ptr<GameSprite> AquariumSpriteManager::GetSprite(AquariumCreatureType t){
@@ -223,6 +240,8 @@ std::shared_ptr<GameSprite> AquariumSpriteManager::GetSprite(AquariumCreatureTyp
             return std::make_shared<GameSprite>(*this->m_jellyfish);
         case AquariumCreatureType::PufferFish:
             return std::make_shared<GameSprite>(*this->m_pufferfish);
+        case AquariumCreatureType::GoldenJelly:
+            return std::make_shared<GameSprite>(*this->m_goldenJelly);
         default:
             return nullptr;
     }
@@ -307,6 +326,9 @@ void Aquarium::SpawnCreature(AquariumCreatureType type) {
             break;
         case AquariumCreatureType::PufferFish:
             this->addCreature(std::make_shared<PufferFish>(x, y, speed, this->m_sprite_manager->GetSprite(AquariumCreatureType::PufferFish)));
+            break;
+        case AquariumCreatureType::GoldenJelly:
+            this->addCreature(std::make_shared<GoldenJellyDrifter>(x, y, speed, this->m_sprite_manager->GetSprite(AquariumCreatureType::GoldenJelly)));
             break;
         default:
             ofLogError() << "Unknown creature type to spawn!";
@@ -562,4 +584,19 @@ std::vector<AquariumCreatureType> AquariumLevel::Repopulate() {
         }
     }
     return toRepopulate;
+}
+void Level_GoldenJellyDrifters::ConsumePopulation(AquariumCreatureType creatureType, int power){
+    // Resta 1 del pool del tipo correspondiente (igual que el base)
+    for (auto& node : this->m_levelPopulation){
+        if (node->creatureType == creatureType){
+            if (node->currentPopulation == 0) return;
+            node->currentPopulation -= 1;
+
+            // Solo sumar score del nivel si es Golden
+            if (creatureType == AquariumCreatureType::GoldenJelly){
+                this->m_level_score += power;
+            }
+            return;
+        }
+    }
 }
